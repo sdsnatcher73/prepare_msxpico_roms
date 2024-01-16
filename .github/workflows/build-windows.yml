@@ -49,5 +49,5 @@ jobs:
       uses: actions/upload-artifact@v4.1.0
       with:
         name: prepare_msxpico_roms_windows
-        path: publsh
+        path: publish
         
