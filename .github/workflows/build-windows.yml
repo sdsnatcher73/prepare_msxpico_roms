@@ -48,6 +48,8 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.1.0
       with:
-        name: prepare_msxpico_roms_windows
+        name: prepare_msxpico_roms_$env:Configuration
         path: publish
+      env:
+        Configuration: ${{ matrix.configuration }}
         
