@@ -1,40 +1,76 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text;
 
 namespace prepare_msxpico_roms
 {
+    struct romEntryHeader
+    {
+        public string name;
+        public UInt32 offset;
+        public UInt32 size;
+        public UInt16 mapper;
+        public UInt16 generation;
+
+        const UInt16 nameIndex = 0;
+        const UInt16 offsetIndex = nameIndex + 64;
+        const UInt16 sizeIndex = offsetIndex + 4;
+        const UInt16 mapperIndex = sizeIndex + 4;
+        const UInt16 generationIndex = mapperIndex + 2;
+
+        public romEntryHeader(string name, Int64 offset, Int64 size, Int64 mapper, Int64 generation)
+        {
+            this.name = name[..64];
+            this.offset = (UInt32) offset;
+            this.size = (UInt32) size;
+            this.mapper = (UInt16) mapper;
+            this.generation = (UInt16) generation;
+        }
+
+        public readonly byte[] GetBytes()
+        {
+            byte[] header = new byte[128];
+
+            Encoding.ASCII.GetBytes(name).CopyTo(header, nameIndex);
+            BitConverter.GetBytes(offset).CopyTo(header, offsetIndex);
+            BitConverter.GetBytes(size).CopyTo(header,sizeIndex);
+            BitConverter.GetBytes(mapper).CopyTo(header, mapperIndex);
+            BitConverter.GetBytes(generation).CopyTo(header, generationIndex);
+
+            return header;
+        }
+    }
+
     internal class Program
     {
         static void Main(string[] args)
         {
             string romFilesDirName = ".";
-            string concatOutputFileName = "msxpico.rom";
-            string codeOutputFileName = "msxpico.c";
-            Int64 romIndex = 0;
-            Int64 concatOutputIndex = 0;
+            string concatOutputFileName = "msxpico.bin";
+            UInt32 concatOutputIndex = 0;
 
-            const Int64 mapperGeneric8       = 0;  /* Generic switch, 8kB pages     */
-            const Int64 mapperGeneric16      = 1;  /* Generic switch, 16kB pages    */
-            const Int64 mapperKonami5        = 2;  /* Konami 5000/7000/9000/B000h   */
-            const Int64 mapperKonami4        = 3;  /* Konami 4000/6000/8000/A000h   */
-            const Int64 mapperASCII8         = 4;  /* ASCII 6000/6800/7000/7800h    */
-            const Int64 mapperASCII16        = 5;  /* ASCII 6000/7000h              */
-            const Int64 mapperGameMaster2    = 6;  /* Konami GameMaster2 cartridge  */
-            const Int64 mapperFMPAC          = 7;  /* Panasonic FMPAC cartridge     */
-            const Int64 mapperASCII16Ex      = 8;  /* ASCII16 with 16 bits mapper   */
-            const Int64 mapperRType          = 9;  /* R-Type cartridge              */
-            const Int64 mapperNextorRAM      = 10; /* Nextor                        */
-            const Int64 mapperDSK2ROM        = 11; /* Modified dsk2rom              */
-            const Int64 mapperPlain0000      = 12; /* Plain ROM starting at 0000h   */
-            const Int64 mapperPlain4000      = 13; /* Plain ROM starting at 4000h   */
-            const Int64 mapperPlain8000      = 14; /* Plain ROM starting at 8000h   */
-            const Int64 mapperNeo16          = 15; /* Neo (Aoineko) 16kB pages      */
-            const Int64 mapperNeo8           = 16; /* Neo (Aoineko) 8kB pages       */
-            const Int64 mapperKonamiUltimate = 17; /* Neo (Aoineko) 8kB pages       */
-            const Int64 mapperNextorNoRAM    = 18; /* Nextor without extra RAM      */
-            const Int64 mapperSCCIOnly       = 19; /* SCC-I in mainslot             */
+            const UInt16 mapperGeneric8 = 0;        /* Generic switch, 8kB pages     */
+            const UInt16 mapperGeneric16 = 1;       /* Generic switch, 16kB pages    */
+            const UInt16 mapperKonami5 = 2;         /* Konami 5000/7000/9000/B000h   */
+            const UInt16 mapperKonami4 = 3;         /* Konami 4000/6000/8000/A000h   */
+            const UInt16 mapperASCII8 = 4;          /* ASCII 6000/6800/7000/7800h    */
+            const UInt16 mapperASCII16 = 5;         /* ASCII 6000/7000h              */
+            const UInt16 mapperGameMaster2 = 6;     /* Konami GameMaster2 cartridge  */
+            const UInt16 mapperFMPAC = 7;           /* Panasonic FMPAC cartridge     */
+            const UInt16 mapperASCII16Ex = 8;       /* ASCII16 with 16 bits mapper   */
+            const UInt16 mapperRType = 9;           /* R-Type cartridge              */
+            const UInt16 mapperNextorRAM = 10;      /* Nextor                        */
+            const UInt16 mapperDSK2ROM = 11;        /* Modified dsk2rom              */
+            const UInt16 mapperPlain0000 = 12;      /* Plain ROM starting at 0000h   */
+            const UInt16 mapperPlain4000 = 13;      /* Plain ROM starting at 4000h   */
+            const UInt16 mapperPlain8000 = 14;      /* Plain ROM starting at 8000h   */
+            const UInt16 mapperNeo16 = 15;          /* Neo (Aoineko) 16kB pages      */
+            const UInt16 mapperNeo8 = 16;           /* Neo (Aoineko) 8kB pages       */
+            const UInt16 mapperKonamiUltimate = 17; /* Neo (Aoineko) 8kB pages       */
+            const UInt16 mapperNextorNoRAM = 18;    /* Nextor without extra RAM      */
+            const UInt16 mapperSCCIOnly = 19;       /* SCC-I in mainslot             */
 
-            const Int64 generationMSX1 = 0;
-            const Int64 generationMSX2 = 1;
+            const UInt16 generationMSX1 = 0;
+            const UInt16 generationMSX2 = 1;
 
             if (args.Length == 1) 
             {
@@ -49,114 +85,118 @@ namespace prepare_msxpico_roms
             FileInfo[] romFilesInfo = romFilesDirInfo.GetFiles("*.rom");
 
             FileStream concatOutputFileStream = File.Open(Path.Combine(romFilesDirName, concatOutputFileName), FileMode.OpenOrCreate & FileMode.Truncate);
-            StreamWriter codeOutputFileStreamWriter = new StreamWriter(Path.Combine(romFilesDirName, codeOutputFileName));
+            
+            byte[] initConcatOutputFile;
 
+            initConcatOutputFile = Encoding.ASCII.GetBytes("MSXPICO_ROM_CAT ");
+            initConcatOutputFile[15] = 0x00;
+            concatOutputFileStream.Write(initConcatOutputFile, 0, 16);
+            
             foreach (FileInfo romFileInfo in romFilesInfo) 
             {
-                string romFileName = romFileInfo.Name;
-                Int64 romFileSize = romFileInfo.Length;
+                romEntryHeader romHeader = new();
 
-                string romName = romFileInfo.Name.Split('.')[0].Split('_')[0];
+                romHeader.name = romFileInfo.Name.Split('.')[0].Split('_')[0];
                 string romMapperString = romFileInfo.Name.Split('.')[0].Split('_')[1];
-                Int64 romMapper = -1;
                 string romGenerationString = romFileInfo.Name.Split('.')[0].Split('_')[2];
-                Int64 romGeneration = -1;
+                romHeader.offset = concatOutputIndex;
+                romHeader.size = (UInt32) romFileInfo.Length;
 
                 switch (romMapperString)
                 {
                     case "generic8":
                         {
-                            romMapper = mapperGeneric8;
+                            romHeader.mapper = mapperGeneric8;
                             break;
                         }
 
                     case "generic16":
                         {
-                            romMapper = mapperGeneric16;
+                            romHeader.mapper = mapperGeneric16;
                             break;
                         }
 
                     case "konami5":
                         {
-                            romMapper = mapperKonami5;
+                            romHeader.mapper = mapperKonami5;
                             break;
                         }
 
                     case "konami4":
                         {
-                            romMapper = mapperKonami4;
+                            romHeader.mapper = mapperKonami4;
                             break;
                         }
 
                     case "ascii8":
                         {
-                            romMapper = mapperASCII8;
+                            romHeader.mapper = mapperASCII8;
                             break;
                         }
 
                     case "ascii16":
                         {
-                            romMapper = mapperASCII16;
+                            romHeader.mapper = mapperASCII16;
                             break;
                         }
 
                     case "gamemaster2":
                         {
-                            romMapper = mapperGameMaster2;
+                            romHeader.mapper = mapperGameMaster2;
                             break;
                         }
 
                     case "ascii16ex":
                         {
-                            romMapper = mapperASCII16Ex;
+                            romHeader.mapper = mapperASCII16Ex;
                             break;
                         }
 
                     case "rtype":
                         {
-                            romMapper = mapperRType;
+                            romHeader.mapper = mapperRType;
                             break;
                         }
 
                     case "dsk2rom":
                         {
-                            romMapper = mapperDSK2ROM;
+                            romHeader.mapper = mapperDSK2ROM;
                             break;
                         }
 
                     case "plain0000":
                         {
-                            romMapper = mapperPlain0000;
+                            romHeader.mapper = mapperPlain0000;
                             break;
                         }
 
                     case "plain4000":
                         {
-                            romMapper = mapperPlain4000;
+                            romHeader.mapper = mapperPlain4000;
                             break;
                         }
 
                     case "plain8000":
                         {
-                            romMapper = mapperPlain8000;
+                            romHeader.mapper = mapperPlain8000;
                             break;
                         }
 
                     case "neo16":
                         {
-                            romMapper = mapperNeo16;
+                            romHeader.mapper = mapperNeo16;
                             break;
                         }
 
                     case "neo8":
                         {
-                            romMapper = mapperNeo8;
+                            romHeader.mapper = mapperNeo8;
                             break;
                         }
 
                     case "konamiultimate":
                         {
-                            romMapper = mapperKonamiUltimate;
+                            romHeader.mapper = mapperKonamiUltimate;
                             break;
                         }
 
@@ -166,36 +206,33 @@ namespace prepare_msxpico_roms
                 {
                     case "msx1":
                         {
-                            romGeneration = generationMSX1;
+                            romHeader.generation = generationMSX1;
                             break;
                         }
 
                     case "msx2":
                         {
-                            romGeneration = generationMSX2;
+                            romHeader.generation = generationMSX2;
                             break;
                         }
                 }
 
-                codeOutputFileStreamWriter.WriteLine("ROM Index:\t" + romIndex);
-                codeOutputFileStreamWriter.WriteLine("ROM Name:\t" + romName);
-                codeOutputFileStreamWriter.WriteLine("ROM Mapper:\t" + romMapper);
-                codeOutputFileStreamWriter.WriteLine("ROM Generation:\t" + romGeneration);
-                codeOutputFileStreamWriter.WriteLine("ROM Start Position:\t" + concatOutputIndex);
-                codeOutputFileStreamWriter.WriteLine("ROM Size:\t" + romFileSize);
+                
+                FileStream romFileStream = File.Open(Path.Combine(romFilesDirName, romFileInfo.Name), FileMode.Open);
 
-                FileStream romFileStream = File.Open(romFilesDirName + romFileName, FileMode.Open);
-
+                concatOutputFileStream.Write(romHeader.GetBytes(),0 ,128);
                 romFileStream.CopyTo(concatOutputFileStream);
                 romFileStream.Close();
 
-                romIndex++;
-                concatOutputIndex += romFileSize;
+                concatOutputIndex += (romHeader.size + 128);
                 
             }
 
+            // Write a terminator header so pico knows he is finished;
+            byte[] romTerminator = new byte[128];
+            concatOutputFileStream.Write(romTerminator, 0, 128);
+
             concatOutputFileStream.Close();
-            codeOutputFileStreamWriter.Close();
         }
     }
 }
