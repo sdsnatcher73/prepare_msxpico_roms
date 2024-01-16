@@ -40,7 +40,7 @@ jobs:
 
     # Publish the application
     - name: Publish the applications
-      run: dotnet piblish $env:Solution_Name -c $env:Configuration -o $temp/publish
+      run: dotnet publish $env:Solution_Name -c $env:Configuration -o $temp/publish
       env:
         Configuration: ${{ matrix.configuration }}
       
