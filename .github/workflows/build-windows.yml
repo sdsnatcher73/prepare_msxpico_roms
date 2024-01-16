@@ -10,15 +10,8 @@ jobs:
 
   build:
 
-    strategy:
-      matrix:
-        configuration: [ Debug, Release ]
-
     runs-on: windows-latest 
     
-    env:
-      Solution_Name: prepare_msxpico_roms
-      
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -31,25 +24,17 @@ jobs:
       with:
         dotnet-version: 8.x.x
 
-
     # Build the application
     - name: Build the application
-      run: dotnet build $env:Solution_Name -c $env:Configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
+      run: dotnet build prepare_msxpico_roms -c Release
 
     # Publish the application
     - name: Publish the applications
-      run: dotnet publish $env:Solution_Name -c $env:Configuration -o publish
-      env:
-        Configuration: ${{ matrix.configuration }}
+      run: dotnet publish prepare_msxpico_roms -c Release -o publish
       
     # Upload the application artifacts
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.1.0
       with:
-        name: prepare_msxpico_roms_$env:Configuration
-        path: publish
-      env:
-        Configuration: ${{ matrix.configuration }}
-        
+        name: prepare_msxpico_roms
+        path: publish        
