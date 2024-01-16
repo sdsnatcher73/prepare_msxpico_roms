@@ -32,8 +32,20 @@ jobs:
         dotnet-version: 8.x.x
 
 
-    # Restore the application to populate the obj folder with RuntimeIdentifiers
+    # Build the application
     - name: Build the application
       run: dotnet build $env:Solution_Name -c $env:Configuration
       env:
         Configuration: ${{ matrix.configuration }}
+
+    # Publish the application
+    - name: Publish the applications
+      run: dotnet piblish $env:Solution_Name -c $env:Configuration -o $temp/publish
+      env:
+        Configuration: ${{ matrix.configuration }}
+      
+    # Upload the application artifacts
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.1.0
+      with:
+        name: $temp/publish
