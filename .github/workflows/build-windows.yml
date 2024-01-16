@@ -40,7 +40,7 @@ jobs:
 
     # Publish the application
     - name: Publish the applications
-      run: dotnet publish $env:Solution_Name -c $env:Configuration -o $temp/publish
+      run: dotnet publish $env:Solution_Name -c $env:Configuration -o $temp\publish
       env:
         Configuration: ${{ matrix.configuration }}
       
@@ -49,5 +49,5 @@ jobs:
       uses: actions/upload-artifact@v4.1.0
       with:
         name: prepare_msxpico_roms_windows
-        path: $temp/publish
+        path: $temp\publish
         
