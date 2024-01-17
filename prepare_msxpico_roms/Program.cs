@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
+using ByteSizeLib;
 
 namespace prepare_msxpico_roms
 {
@@ -222,7 +223,7 @@ namespace prepare_msxpico_roms
                     concatOutputFileStream.Write(romHeader.GetBytes(),0 ,96);
                     romFileStream.CopyTo(concatOutputFileStream);
                     romFileStream.Close();
-    
+
                     concatOutputSize += (romHeader.size + 96);
                 }
                 else
@@ -231,6 +232,8 @@ namespace prepare_msxpico_roms
                 }
             }
 
+            Console.WriteLine("Size of msxpico.bin:\t" + ByteSize.FromBytes(concatOutputSize + 96).ToString("#.# KiB"));
+            Console.WriteLine("Remaining flash space:\t" + ByteSize.FromBytes((7 * 1024 * 1024) - (concatOutputSize + 96)).ToString("#.# KiB"));
             // Write a terminator header so pico knows he is finished;
             byte[] romTerminator = new byte[96];
             concatOutputFileStream.Write(romTerminator, 0, 96);
