@@ -12,15 +12,13 @@ namespace prepare_msxpico_roms
         public UInt16 generation;
 
         const UInt16 nameIndex = 0;
-        const UInt16 offsetIndex = nameIndex + 64;
-        const UInt16 sizeIndex = offsetIndex + 4;
+        const UInt16 sizeIndex = nameIndex + 80;
         const UInt16 mapperIndex = sizeIndex + 4;
         const UInt16 generationIndex = mapperIndex + 2;
 
         public romEntryHeader(string name, Int64 offset, Int64 size, Int64 mapper, Int64 generation)
         {
-            this.name = name[..64];
-            this.offset = (UInt32) offset;
+            this.name = name[..80];
             this.size = (UInt32) size;
             this.mapper = (UInt16) mapper;
             this.generation = (UInt16) generation;
@@ -28,10 +26,9 @@ namespace prepare_msxpico_roms
 
         public readonly byte[] GetBytes()
         {
-            byte[] header = new byte[128];
+            byte[] header = new byte[96];
 
             Encoding.ASCII.GetBytes(name).CopyTo(header, nameIndex);
-            BitConverter.GetBytes(offset).CopyTo(header, offsetIndex);
             BitConverter.GetBytes(size).CopyTo(header,sizeIndex);
             BitConverter.GetBytes(mapper).CopyTo(header, mapperIndex);
             BitConverter.GetBytes(generation).CopyTo(header, generationIndex);
@@ -46,7 +43,7 @@ namespace prepare_msxpico_roms
         {
             string romFilesDirName = ".";
             string concatOutputFileName = "msxpico.bin";
-            UInt32 concatOutputIndex = 0;
+            UInt32 concatOutputSize = 0;
 
             const UInt16 mapperGeneric8 = 0;        /* Generic switch, 8kB pages     */
             const UInt16 mapperGeneric16 = 1;       /* Generic switch, 16kB pages    */
@@ -99,7 +96,6 @@ namespace prepare_msxpico_roms
                 romHeader.name = romFileInfo.Name.Split('.')[0].Split('_')[0];
                 string romMapperString = romFileInfo.Name.Split('.')[0].Split('_')[1];
                 string romGenerationString = romFileInfo.Name.Split('.')[0].Split('_')[2];
-                romHeader.offset = concatOutputIndex;
                 romHeader.size = (UInt32) romFileInfo.Length;
 
                 switch (romMapperString)
@@ -220,17 +216,17 @@ namespace prepare_msxpico_roms
                 
                 FileStream romFileStream = File.Open(Path.Combine(romFilesDirName, romFileInfo.Name), FileMode.Open);
 
-                concatOutputFileStream.Write(romHeader.GetBytes(),0 ,128);
+                concatOutputFileStream.Write(romHeader.GetBytes(),0 ,96);
                 romFileStream.CopyTo(concatOutputFileStream);
                 romFileStream.Close();
 
-                concatOutputIndex += (romHeader.size + 128);
+                concatOutputSize += (romHeader.size + 96);
                 
             }
 
             // Write a terminator header so pico knows he is finished;
-            byte[] romTerminator = new byte[128];
-            concatOutputFileStream.Write(romTerminator, 0, 128);
+            byte[] romTerminator = new byte[96];
+            concatOutputFileStream.Write(romTerminator, 0, 96);
 
             concatOutputFileStream.Close();
         }
