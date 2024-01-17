@@ -98,130 +98,132 @@ namespace prepare_msxpico_roms
                 string romGenerationString = romFileInfo.Name.Split('.')[0].Split('_')[2];
                 romHeader.size = (UInt32) romFileInfo.Length;
 
-                switch (romMapperString)
+                while (concatOutputSize + romHeader.size + (2 * 96) < (7 * 1024 * 1024))
                 {
-                    case "generic8":
-                        {
-                            romHeader.mapper = mapperGeneric8;
-                            break;
-                        }
-
-                    case "generic16":
-                        {
-                            romHeader.mapper = mapperGeneric16;
-                            break;
-                        }
-
-                    case "konami5":
-                        {
-                            romHeader.mapper = mapperKonami5;
-                            break;
-                        }
-
-                    case "konami4":
-                        {
-                            romHeader.mapper = mapperKonami4;
-                            break;
-                        }
-
-                    case "ascii8":
-                        {
-                            romHeader.mapper = mapperASCII8;
-                            break;
-                        }
-
-                    case "ascii16":
-                        {
-                            romHeader.mapper = mapperASCII16;
-                            break;
-                        }
-
-                    case "gamemaster2":
-                        {
-                            romHeader.mapper = mapperGameMaster2;
-                            break;
-                        }
-
-                    case "ascii16ex":
-                        {
-                            romHeader.mapper = mapperASCII16Ex;
-                            break;
-                        }
-
-                    case "rtype":
-                        {
-                            romHeader.mapper = mapperRType;
-                            break;
-                        }
-
-                    case "dsk2rom":
-                        {
-                            romHeader.mapper = mapperDSK2ROM;
-                            break;
-                        }
-
-                    case "plain0000":
-                        {
-                            romHeader.mapper = mapperPlain0000;
-                            break;
-                        }
-
-                    case "plain4000":
-                        {
-                            romHeader.mapper = mapperPlain4000;
-                            break;
-                        }
-
-                    case "plain8000":
-                        {
-                            romHeader.mapper = mapperPlain8000;
-                            break;
-                        }
-
-                    case "neo16":
-                        {
-                            romHeader.mapper = mapperNeo16;
-                            break;
-                        }
-
-                    case "neo8":
-                        {
-                            romHeader.mapper = mapperNeo8;
-                            break;
-                        }
-
-                    case "konamiultimate":
-                        {
-                            romHeader.mapper = mapperKonamiUltimate;
-                            break;
-                        }
-
+                    switch (romMapperString)
+                    {
+                        case "generic8":
+                            {
+                                romHeader.mapper = mapperGeneric8;
+                                break;
+                            }
+    
+                        case "generic16":
+                            {
+                                romHeader.mapper = mapperGeneric16;
+                                break;
+                            }
+    
+                        case "konami5":
+                            {
+                                romHeader.mapper = mapperKonami5;
+                                break;
+                            }
+    
+                        case "konami4":
+                            {
+                                romHeader.mapper = mapperKonami4;
+                                break;
+                            }
+    
+                        case "ascii8":
+                            {
+                                romHeader.mapper = mapperASCII8;
+                                break;
+                            }
+    
+                        case "ascii16":
+                            {
+                                romHeader.mapper = mapperASCII16;
+                                break;
+                            }
+    
+                        case "gamemaster2":
+                            {
+                                romHeader.mapper = mapperGameMaster2;
+                                break;
+                            }
+    
+                        case "ascii16ex":
+                            {
+                                romHeader.mapper = mapperASCII16Ex;
+                                break;
+                            }
+    
+                        case "rtype":
+                            {
+                                romHeader.mapper = mapperRType;
+                                break;
+                            }
+    
+                        case "dsk2rom":
+                            {
+                                romHeader.mapper = mapperDSK2ROM;
+                                break;
+                            }
+    
+                        case "plain0000":
+                            {
+                                romHeader.mapper = mapperPlain0000;
+                                break;
+                            }
+    
+                        case "plain4000":
+                            {
+                                romHeader.mapper = mapperPlain4000;
+                                break;
+                            }
+    
+                        case "plain8000":
+                            {
+                                romHeader.mapper = mapperPlain8000;
+                                break;
+                            }
+    
+                        case "neo16":
+                            {
+                                romHeader.mapper = mapperNeo16;
+                                break;
+                            }
+    
+                        case "neo8":
+                            {
+                                romHeader.mapper = mapperNeo8;
+                                break;
+                            }
+    
+                        case "konamiultimate":
+                            {
+                                romHeader.mapper = mapperKonamiUltimate;
+                                break;
+                            }
+    
+                    }
+    
+                    switch (romGenerationString)
+                    {
+                        case "msx1":
+                            {
+                                romHeader.generation = generationMSX1;
+                                break;
+                            }
+    
+                        case "msx2":
+                            {
+                                romHeader.generation = generationMSX2;
+                                break;
+                            }
+                    }
+    
+                    
+                    FileStream romFileStream = File.Open(Path.Combine(romFilesDirName, romFileInfo.Name), FileMode.Open);
+    
+                    concatOutputFileStream.Write(romHeader.GetBytes(),0 ,96);
+                    romFileStream.CopyTo(concatOutputFileStream);
+                    romFileStream.Close();
+    
+                    concatOutputSize += (romHeader.size + 96);
                 }
-
-                switch (romGenerationString)
-                {
-                    case "msx1":
-                        {
-                            romHeader.generation = generationMSX1;
-                            break;
-                        }
-
-                    case "msx2":
-                        {
-                            romHeader.generation = generationMSX2;
-                            break;
-                        }
-                }
-
-                
-                FileStream romFileStream = File.Open(Path.Combine(romFilesDirName, romFileInfo.Name), FileMode.Open);
-
-                concatOutputFileStream.Write(romHeader.GetBytes(),0 ,96);
-                romFileStream.CopyTo(concatOutputFileStream);
-                romFileStream.Close();
-
-                concatOutputSize += (romHeader.size + 96);
-                
             }
 
             // Write a terminator header so pico knows he is finished;
