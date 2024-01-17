@@ -82,7 +82,8 @@ namespace prepare_msxpico_roms
             FileInfo[] romFilesInfo = romFilesDirInfo.GetFiles("*.rom");
 
             FileStream concatOutputFileStream = File.Open(Path.Combine(romFilesDirName, concatOutputFileName), FileMode.OpenOrCreate & FileMode.Truncate);
-            
+            concatOutputFileStream.SetLength(0);
+
             byte[] initConcatOutputFile;
 
             initConcatOutputFile = Encoding.ASCII.GetBytes("MSXPICO_ROM_CAT ");
@@ -98,7 +99,7 @@ namespace prepare_msxpico_roms
                 string romGenerationString = romFileInfo.Name.Split('.')[0].Split('_')[2];
                 romHeader.size = (UInt32) romFileInfo.Length;
 
-                while (concatOutputSize + romHeader.size + (2 * 96) < (7 * 1024 * 1024))
+                if (concatOutputSize + romHeader.size + (2 * 96) < (7 * 1024 * 1024))
                 {
                     switch (romMapperString)
                     {
@@ -223,6 +224,10 @@ namespace prepare_msxpico_roms
                     romFileStream.Close();
     
                     concatOutputSize += (romHeader.size + 96);
+                }
+                else
+                {
+                    Console.WriteLine("ROM file " + romHeader.name + " skipped because resulting outputfile would exceed 7MB.");
                 }
             }
 
