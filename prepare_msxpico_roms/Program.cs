@@ -43,8 +43,12 @@ namespace prepare_msxpico_roms
         static void Main(string[] args)
         {
             string romFilesDirName = ".";
-            string concatOutputFileName = "msxpico.bin";
+            string concatOutputFileName = "msxpico.cat";
             UInt32 concatOutputSize = 0;
+
+            const UInt32 concatOutputMaxSize = 9 * 1024 * 1024;
+
+            const string version = "0.4";
 
             const UInt16 mapperGeneric8 = 0;        /* Generic switch, 8kB pages     */
             const UInt16 mapperGeneric16 = 1;       /* Generic switch, 16kB pages    */
@@ -69,6 +73,9 @@ namespace prepare_msxpico_roms
 
             const UInt16 generationMSX1 = 0;
             const UInt16 generationMSX2 = 1;
+
+            Console.WriteLine("MSXpico Catalog Preparation v" + version);
+            Console.WriteLine();
 
             if (args.Length == 1) 
             {
@@ -100,7 +107,7 @@ namespace prepare_msxpico_roms
                 string romGenerationString = romFileInfo.Name.Split('.')[0].Split('_')[2];
                 romHeader.size = (UInt32) romFileInfo.Length;
 
-                if (concatOutputSize + romHeader.size + (2 * 96) < (7 * 1024 * 1024))
+                if (concatOutputSize + romHeader.size + (2 * 96) < (concatOutputMaxSize))
                 {
                     switch (romMapperString)
                     {
@@ -232,8 +239,8 @@ namespace prepare_msxpico_roms
                 }
             }
 
-            Console.WriteLine("Size of msxpico.bin:\t" + ByteSize.FromBytes(concatOutputSize + 96).ToString("#.# KiB"));
-            Console.WriteLine("Remaining flash space:\t" + ByteSize.FromBytes((7 * 1024 * 1024) - (concatOutputSize + 96)).ToString("#.# KiB"));
+            Console.WriteLine("Size of msxpico.cat:\t" + ByteSize.FromBytes(concatOutputSize + 96).ToString("#.# KiB"));
+            Console.WriteLine("Remaining flash space:\t" + ByteSize.FromBytes((concatOutputMaxSize) - (concatOutputSize + 96)).ToString("#.# KiB"));
             // Write a terminator header so pico knows he is finished;
             byte[] romTerminator = new byte[96];
             concatOutputFileStream.Write(romTerminator, 0, 96);
